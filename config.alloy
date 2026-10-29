@@ -68,11 +68,19 @@ discovery.relabel "containers" {
 loki.source.docker "containers" {
   host       = "unix:///var/run/docker.sock"
   targets    = discovery.relabel.containers.output
-  forward_to = [loki.write.central.receiver]
+  forward_to = [loki.process.docker_recent.receiver]
 }
 
 loki.write "central" {
   endpoint {
     url = sys.env("MONITORING_URL") + ":3100/loki/api/v1/push"
+  }
+}
+
+loki.process "docker_recent" {
+  forward_to = [loki.write.central.receiver]
+
+  stage.drop {
+    older_than = "167h"
   }
 }
